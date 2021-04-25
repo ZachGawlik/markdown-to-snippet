@@ -9,15 +9,21 @@ const report = require('vfile-reporter');
 const getBody = (codeString) => codeString.split('\n');
 
 // TODO: handle more languages
-const getScope = (language) => {
-  const scopes = (() => {
+const getScope = (codeNode) => {
+  const languages = [codeNode.lang];
+  if (codeNode.meta) {
+    languages.push(...codeNode.meta.split(' '));
+  }
+  const scopes = languages.flatMap((language) => {
     if (['js'].includes(language)) {
       return ['javascript', 'javascriptreact'];
     } else if (['ts'].includes(language)) {
       return ['typescript', 'typescriptreact'];
+    } else if (['json'].includes(language)) {
+      return ['json', 'jsonc'];
     }
     return [];
-  })();
+  });
   return scopes.length > 0 ? { scope: scopes.join(',') } : {};
 };
 
@@ -40,7 +46,7 @@ function compiler(tree) {
         description: name,
         prefix: prefix.value,
         body: getBody(codeNode.value),
-        ...getScope(codeNode.lang),
+        ...getScope(codeNode),
       };
     } catch (e) {
       throw new Error('Yikes, couldnt parse');
