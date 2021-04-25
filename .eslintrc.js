@@ -1,7 +1,7 @@
 module.exports = {
   env: {
     node: true,
-    es6: true,
+    es2021: true,
     'jest/globals': true,
   },
   plugins: ['prettier', 'jest'],
@@ -13,4 +13,7 @@ module.exports = {
     // Must be last
     'plugin:prettier/recommended',
   ],
+  rules: {
+    'no-console': ['error', { allow: ['error'] }],
+  },
 };

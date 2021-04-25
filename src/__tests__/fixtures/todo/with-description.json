@@ -1,0 +1,14 @@
+{
+  "Log": {
+    "description": "Print statement",
+    "prefix": "lg",
+    "body": ["console.log($1);"],
+    "scope": "javascript,javascriptreact"
+  },
+  "Log Variable": {
+    "description": "Print variable name and value",
+    "prefix": "lgv",
+    "body": ["console.log(`$1: ${$1}`);"],
+    "scope": "javascript,javascriptreact"
+  }
+}
