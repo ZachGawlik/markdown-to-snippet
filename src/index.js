@@ -5,26 +5,29 @@ const find = require('unist-util-find');
 const markdown = require('remark-parse');
 const gfm = require('remark-gfm');
 const report = require('vfile-reporter');
+const markdownToVscodeLang = require('./markdownToVscodeLang');
 
-const getBody = (codeString) => codeString.split('\n');
-
-// TODO: handle more languages
 const getScope = (codeNode) => {
-  const languages = [codeNode.lang];
-  if (codeNode.meta) {
-    languages.push(...codeNode.meta.split(' '));
+  if (!codeNode.lang) {
+    return {};
   }
-  const scopes = languages.flatMap((language) => {
-    if (['js'].includes(language)) {
-      return ['javascript', 'javascriptreact'];
-    } else if (['ts'].includes(language)) {
-      return ['typescript', 'typescriptreact'];
-    } else if (['json'].includes(language)) {
-      return ['json', 'jsonc'];
-    }
-    return [];
-  });
-  return scopes.length > 0 ? { scope: scopes.join(',') } : {};
+  const languages = [codeNode.lang.toLowerCase()];
+  if (codeNode.meta) {
+    languages.push(
+      ...codeNode.meta
+        .split(' ')
+        .filter(Boolean) // clean up blanks if multiple spaces separated entries
+        .map((l) => l.trim().toLowerCase())
+    );
+  }
+
+  const scopes = languages.map(
+    (lang) =>
+      markdownToVscodeLang[lang] ||
+      // Fallback to support language scopes added by vscode extensions
+      lang
+  );
+  return { scope: scopes.join(',') };
 };
 
 function compiler(tree) {
@@ -45,7 +48,7 @@ function compiler(tree) {
       snippets[name] = {
         description: name,
         prefix: prefix.value,
-        body: getBody(codeNode.value),
+        body: codeNode.value.split('\n'),
         ...getScope(codeNode),
       };
     } catch (e) {
