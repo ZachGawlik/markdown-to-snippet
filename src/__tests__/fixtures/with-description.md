@@ -5,7 +5,7 @@ Print statement
 > prefix: `lg`
 
 ```js
-console.log('$1');
+console.log($1);
 ```
 
 ### Log variable

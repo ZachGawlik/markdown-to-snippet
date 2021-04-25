@@ -32,22 +32,39 @@ const getScope = (codeNode) => {
 
 function compiler(tree) {
   const snippets = {};
-  visit(tree, 'code', (codeNode, index, parentNode) => {
+  visit(tree, 'code', (codeNode, index, { children }) => {
+    let hasDescription = false;
     try {
-      const nameNode = parentNode.children[index - 2];
-      if (!nameNode || nameNode.type !== 'heading') {
-        // TODO: throw error... ideally through vfile message
+      let nameNode = children[index - 2];
+      if (nameNode?.type !== 'heading') {
+        if (children[index - 3]?.type === 'heading') {
+          hasDescription = true;
+          nameNode = children[index - 3];
+        } else {
+          // TODO: throw error, no heading found
+        }
       }
-      const name = nameNode.children[0].value;
 
-      const nodeWithPrefix = parentNode.children[index - 1];
-      const prefix = find(nodeWithPrefix, { type: 'inlineCode' });
-      if (!prefix) {
-        // TODO: throw error... ideally through vfile message
+      let prefixNode, description;
+      if (hasDescription) {
+        if (find(children[index - 2], { type: 'inlineCode' })) {
+          prefixNode = find(children[index - 2], { type: 'inlineCode' });
+          description = find(children[index - 1], { type: 'text' })?.value;
+        } else {
+          prefixNode = find(children[index - 1], { type: 'inlineCode' });
+          description = find(children[index - 2], { type: 'text' })?.value;
+        }
+      } else {
+        prefixNode = find(children[index - 1], { type: 'inlineCode' });
       }
+      if (!prefixNode) {
+        // throw error, no inline code prefix anywhere
+      }
+
+      const name = nameNode.children[0].value;
       snippets[name] = {
-        description: name,
-        prefix: prefix.value,
+        description: description || name,
+        prefix: prefixNode.value,
         body: codeNode.value.split('\n'),
         ...getScope(codeNode),
       };
