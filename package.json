@@ -1,0 +1,47 @@
+{
+  "name": "markdown-to-snippet",
+  "version": "0.1.0",
+  "description": "Write editor snippets with markdown that also serves as documentation",
+  "main": "src/index.js",
+  "scripts": {
+    "prepare": "husky install",
+    "commit": "cz",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZachGawlik/markdown-to-snippet.git"
+  },
+  "keywords": [
+    "vscode",
+    "snippets",
+    "vscode-snippets",
+    "remark"
+  ],
+  "author": "Zach Gawlik <zachgawlik@gmail.com> (https://zachgawlik.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ZachGawlik/markdown-to-snippet/issues"
+  },
+  "homepage": "https://github.com/ZachGawlik/markdown-to-snippet#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^12.1.1",
+    "@commitlint/config-conventional": "^12.1.1",
+    "commitizen": "^4.2.3",
+    "cz-conventional-changelog": "3.3.0",
+    "eslint": "^7.25.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.3.5",
+    "eslint-plugin-prettier": "^3.4.0",
+    "husky": "^6.0.0",
+    "jest": "^26.6.3",
+    "prettier": "^2.2.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
