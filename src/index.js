@@ -6,6 +6,7 @@ const markdown = require('remark-parse');
 const gfm = require('remark-gfm');
 const report = require('vfile-reporter');
 const markdownToVscodeLang = require('./markdownToVscodeLang');
+const Errors = require('./errors');
 
 const getScope = (codeNode) => {
   if (!codeNode.lang) {
@@ -80,7 +81,16 @@ function markdownToSnippetCompiler() {
 }
 
 const markdownToSnippet = async (filepath) => {
-  const input = await fs.readFile(filepath, 'utf8');
+  let input;
+  try {
+    input = await fs.readFile(filepath, 'utf8');
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      throw new Errors.FileDoesNotExist(`File does not exist`, { filepath });
+    }
+    throw new Error(e);
+  }
+
   const res = unified()
     .use(markdown)
     .use(gfm)

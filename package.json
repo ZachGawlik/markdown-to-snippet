@@ -2,6 +2,7 @@
   "name": "markdown-to-snippet",
   "version": "0.1.0",
   "description": "Write editor snippets with markdown that also serves as documentation",
+  "bin": "src/cli.js",
   "main": "src/index.js",
   "scripts": {
     "prepare": "husky install",
@@ -45,6 +46,9 @@
     }
   },
   "dependencies": {
+    "chalk": "^4.1.1",
+    "commander": "^7.2.0",
+    "log-symbols": "^4.1.0",
     "remark-gfm": "^1.0.0",
     "remark-parse": "^9.0.0",
     "unified": "^9.2.1",

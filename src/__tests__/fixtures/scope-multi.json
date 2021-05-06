@@ -3,7 +3,7 @@
     "description": "Field as enum",
     "prefix": "enu",
     "body": [
-      "$1: \"$1\","
+      "\"$1\": \"$1\","
     ],
     "scope": "javascript,javascriptreact,typescript,typescriptreact,json,jsonc"
   }
