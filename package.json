@@ -47,14 +47,14 @@
     "prettier": "^2.6.2"
   },
   "dependencies": {
-    "chalk": "^4.1.1",
-    "commander": "^7.2.0",
-    "log-symbols": "^4.1.0",
-    "remark-gfm": "^1.0.0",
-    "remark-parse": "^9.0.0",
-    "unified": "^9.2.1",
+    "chalk": "^5.0.1",
+    "commander": "^9.2.0",
+    "log-symbols": "^5.1.0",
+    "remark-gfm": "^3.0.1",
+    "remark-parse": "^10.0.1",
+    "unified": "^10.1.2",
     "unist-util-find": "^1.0.2",
-    "unist-util-visit": "^2.0.3",
-    "vfile-reporter": "^6.0.2"
+    "unist-util-visit": "^4.1.0",
+    "vfile-reporter": "^7.0.4"
   }
 }

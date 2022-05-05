@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
-import unified from 'unified';
-import visit from 'unist-util-visit';
+import { unified } from 'unified';
+import { visit } from 'unist-util-visit';
 import find from 'unist-util-find';
 import markdown from 'remark-parse';
 import gfm from 'remark-gfm';

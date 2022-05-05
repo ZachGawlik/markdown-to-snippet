@@ -4,9 +4,9 @@
 import { constants as FS_MODES } from 'fs';
 import { access, writeFile as _writeFile, mkdir } from 'fs/promises';
 import { dirname } from 'path';
-import { stderr } from 'chalk';
+import { chalkStderr } from 'chalk';
 import { program } from 'commander';
-import { error, success } from 'log-symbols';
+import logSymbols from 'log-symbols';
 import { markdownToSnippet } from './index.js';
 import { KnownError } from './errors.js';
 
@@ -16,7 +16,7 @@ const pathExists = (file, mode) =>
     .catch(() => false);
 
 const exitError = (errorString) => {
-  console.error(stderr`{red ${error} ${errorString.trim()}}`);
+  console.error(chalkStderr`{red ${logSymbols.error} ${errorString.trim()}}`);
   process.exit(1);
 };
 
@@ -37,7 +37,9 @@ program
   .arguments('<snippets.md> [destination.json]')
   .action(async function runMarkdownToSnippet(inputFile, outputFile) {
     if (!['.md', '.markdown'].some((ext) => inputFile.endsWith(ext))) {
-      exitError(stderr`Expected {italic ${inputFile}} to be a {bold .md} file`);
+      exitError(
+        chalkStderr`Expected {italic ${inputFile}} to be a {bold .md} file`
+      );
     }
 
     let snippet;
@@ -45,10 +47,10 @@ program
       snippet = await markdownToSnippet(inputFile);
     } catch (e) {
       if (e instanceof KnownError) {
-        exitError(stderr`${e}`);
+        exitError(chalkStderr`${e}`);
       }
       console.error(
-        stderr`An error was encountered when parsing the markdown file`
+        chalkStderr`An error was encountered when parsing the markdown file`
       );
       throw new Error(e);
     }
@@ -61,19 +63,19 @@ program
 
     if (!outputFile.endsWith('.json')) {
       exitError(
-        stderr`Expected {italic ${outputFile}} to be a {bold .json} file`
+        chalkStderr`Expected {italic ${outputFile}} to be a {bold .json} file`
       );
     }
 
     try {
       writeFile(outputFile, snippet);
       console.log(
-        stderr`
-          {green ${success} Snippets have been written to {italic ${outputFile}}}
+        chalkStderr`
+          {green ${logSymbols.success} Snippets have been written to {italic ${outputFile}}}
         `.trim()
       );
     } catch (err) {
-      exitError(stderr`Failed to write to file ${err}`);
+      exitError(chalkStderr`Failed to write to file ${err}`);
     }
   });
 
