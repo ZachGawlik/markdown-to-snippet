@@ -1,8 +1,9 @@
-const { markdownToSnippet } = require('../');
-const { readdirSync } = require('fs');
-const { readFile } = require('fs/promises');
-const path = require('path');
+import { markdownToSnippet } from '../index';
+import { readdirSync } from 'fs';
+import { readFile } from 'fs/promises';
+import path from 'path';
 
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const root = path.join(__dirname, 'fixtures');
 
 describe('Markdown to snippet', () => {

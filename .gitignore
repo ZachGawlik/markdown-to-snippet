@@ -1,3 +1,13 @@
 node_modules
 .DS_Store
 .vscode
+*.log
+
+.yarn/*
+# .yarn/cache # I'm choosing to use zero-install
+!.yarn/patches
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+todo.md

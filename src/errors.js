@@ -1,4 +1,4 @@
-class KnownError extends Error {
+export class KnownError extends Error {
   constructor(message, extra) {
     super(message);
     this.name = this.constructor.name;
@@ -6,13 +6,14 @@ class KnownError extends Error {
   }
 }
 
-class FileDoesNotExist extends KnownError {
+export class FileDoesNotExist extends KnownError {
   toString() {
     return `${this.message} ${this.extra.filepath}`;
   }
 }
 
-module.exports = {
-  KnownError,
-  FileDoesNotExist,
-};
+export class MarkdownParsingError extends KnownError {
+  toString() {
+    return `${this.message}\n${this.extra.snippet}`;
+  }
+}

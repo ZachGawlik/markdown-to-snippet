@@ -1,12 +1,12 @@
-const fs = require('fs/promises');
-const unified = require('unified');
-const visit = require('unist-util-visit');
-const find = require('unist-util-find');
-const markdown = require('remark-parse');
-const gfm = require('remark-gfm');
-const report = require('vfile-reporter');
-const markdownToVscodeLang = require('./markdownToVscodeLang');
-const Errors = require('./errors');
+import { readFile } from 'fs/promises';
+import unified from 'unified';
+import visit from 'unist-util-visit';
+import find from 'unist-util-find';
+import markdown from 'remark-parse';
+import gfm from 'remark-gfm';
+import report from 'vfile-reporter';
+import markdownToVscodeLang from './markdownToVscodeLang';
+import { MarkdownParsingError, KnownError, FileDoesNotExist } from './errors';
 
 const getScope = (codeNode) => {
   if (!codeNode.lang) {
@@ -42,7 +42,9 @@ function compiler(tree) {
           hasDescription = true;
           nameNode = children[index - 3];
         } else {
-          // TODO: throw error, no heading found
+          throw new MarkdownParsingError('Could not find heading for snippet', {
+            snippet: codeNode.value,
+          });
         }
       }
 
@@ -70,6 +72,9 @@ function compiler(tree) {
         ...getScope(codeNode),
       };
     } catch (e) {
+      if (e instanceof KnownError) {
+        throw e;
+      }
       throw new Error('Yikes, couldnt parse');
     }
   });
@@ -80,13 +85,13 @@ function markdownToSnippetCompiler() {
   this.Compiler = compiler;
 }
 
-const markdownToSnippet = async (filepath) => {
+export const markdownToSnippet = async (filepath) => {
   let input;
   try {
-    input = await fs.readFile(filepath, 'utf8');
+    input = await readFile(filepath, 'utf8');
   } catch (e) {
     if (e.code === 'ENOENT') {
-      throw new Errors.FileDoesNotExist(`File does not exist`, { filepath });
+      throw new FileDoesNotExist(`File does not exist`, { filepath });
     }
     throw new Error(e);
   }
@@ -102,8 +107,4 @@ const markdownToSnippet = async (filepath) => {
     })
     .toString();
   return res;
-};
-
-module.exports = {
-  markdownToSnippet,
 };

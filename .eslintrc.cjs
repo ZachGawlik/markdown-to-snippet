@@ -4,6 +4,9 @@ module.exports = {
     es2021: true,
     'jest/globals': true,
   },
+  parserOptions: {
+    sourceType: 'module',
+  },
   plugins: ['prettier', 'jest'],
   extends: [
     'eslint:recommended',

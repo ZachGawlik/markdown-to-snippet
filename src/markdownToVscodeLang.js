@@ -161,4 +161,4 @@ const markdownToVscodeLang = {
   yml: 'yaml',
 };
 
-module.exports = markdownToVscodeLang;
+export default markdownToVscodeLang;
