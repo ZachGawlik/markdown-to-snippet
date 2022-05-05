@@ -5,8 +5,12 @@ import find from 'unist-util-find';
 import markdown from 'remark-parse';
 import gfm from 'remark-gfm';
 import report from 'vfile-reporter';
-import markdownToVscodeLang from './markdownToVscodeLang';
-import { MarkdownParsingError, KnownError, FileDoesNotExist } from './errors';
+import markdownToVscodeLang from './markdownToVscodeLang.js';
+import {
+  MarkdownParsingError,
+  KnownError,
+  FileDoesNotExist,
+} from './errors.js';
 
 const getScope = (codeNode) => {
   if (!codeNode.lang) {

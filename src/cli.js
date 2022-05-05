@@ -7,8 +7,8 @@ import { dirname } from 'path';
 import { stderr } from 'chalk';
 import { program } from 'commander';
 import { error, success } from 'log-symbols';
-import { markdownToSnippet } from './';
-import { KnownError } from './errors';
+import { markdownToSnippet } from './index.js';
+import { KnownError } from './errors.js';
 
 const pathExists = (file, mode) =>
   access(file, mode)
