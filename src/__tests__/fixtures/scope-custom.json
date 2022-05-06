@@ -1,6 +1,5 @@
 {
   "Custom language snippet": {
-    "description": "Custom language snippet",
     "prefix": "hello",
     "body": [
       "hello = 'world'"

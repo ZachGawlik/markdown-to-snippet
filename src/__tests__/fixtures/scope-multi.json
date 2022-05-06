@@ -1,6 +1,5 @@
 {
   "Field as enum": {
-    "description": "Field as enum",
     "prefix": "enu",
     "body": [
       "\"$1\": \"$1\","

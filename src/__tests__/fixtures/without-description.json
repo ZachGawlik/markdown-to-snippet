@@ -1,6 +1,5 @@
 {
   "Console log statement": {
-    "description": "Console log statement",
     "prefix": "lg",
     "body": [
       "console.log($1);"

@@ -38,43 +38,45 @@ const getScope = (codeNode) => {
 function compiler(tree) {
   const snippets = {};
   visit(tree, 'code', (codeNode, index, { children }) => {
-    let hasDescription = false;
     try {
-      let nameNode = children[index - 2];
-      if (nameNode?.type !== 'heading') {
-        if (children[index - 3]?.type === 'heading') {
-          hasDescription = true;
-          nameNode = children[index - 3];
-        } else {
-          throw new MarkdownParsingError('Could not find heading for snippet', {
-            snippet: codeNode.value,
-          });
+      let name, description, prefixNode;
+
+      let i = index - 1;
+      while (!name && i >= 0) {
+        if (children[i].type === 'code') {
+          break;
         }
+        if (children[i].type === 'heading') {
+          if (children[i].children[0].type === 'text') {
+            name = children[i].children[0].value;
+          }
+          break;
+        }
+        const inlineCode = find(children[i], { type: 'inlineCode' });
+        if (inlineCode) {
+          prefixNode = inlineCode;
+        }
+        if (children[i].type === 'paragraph') {
+          if (children[i].children[0].type === 'text') {
+            description = children[i].children[0].value;
+          }
+        }
+        i--;
       }
 
-      let prefixNode, description;
-      if (hasDescription) {
-        if (find(children[index - 2], { type: 'inlineCode' })) {
-          prefixNode = find(children[index - 2], { type: 'inlineCode' });
-          description = find(children[index - 1], { type: 'text' })?.value;
-        } else {
-          prefixNode = find(children[index - 1], { type: 'inlineCode' });
-          description = find(children[index - 2], { type: 'text' })?.value;
-        }
-      } else {
-        prefixNode = find(children[index - 1], { type: 'inlineCode' });
-      }
-      if (!prefixNode) {
-        // throw error, no inline code prefix anywhere
+      if (!name) {
+        throw new MarkdownParsingError('Could not find heading for snippet', {
+          snippet: codeNode.value,
+        });
       }
 
-      const name = nameNode.children[0].value;
-      snippets[name] = {
-        description: description || name,
-        prefix: prefixNode.value,
-        body: codeNode.value.split('\n'),
-        ...getScope(codeNode),
-      };
+      snippets[name] = {};
+      if (description) {
+        snippets[name].description = description;
+      }
+      snippets[name].prefix = prefixNode.value;
+      snippets[name].body = codeNode.value.split('\n');
+      snippets[name].scope = getScope(codeNode).scope;
     } catch (e) {
       if (e instanceof KnownError) {
         throw e;
