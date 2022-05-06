@@ -35,6 +35,36 @@ const getScope = (codeNode) => {
   return { scope: scopes.join(',') };
 };
 
+function extractFromTextGroup(textGroupNode) {
+  const code = find(textGroupNode, {
+    type: 'inlineCode',
+  })?.value;
+
+  if (!code) {
+    return {
+      text: textGroupNode.children[0].value,
+    };
+  }
+
+  // strip common chars used for separating code vs text
+  return {
+    code,
+    text: textGroupNode.children
+      .map((headingChild) => {
+        if (headingChild.type === 'text') {
+          return headingChild.value
+            .replace(/\)\.$/, '')
+            .replace(')', '')
+            .replace('(', '')
+            .replace(/^\. /, '')
+            .trim();
+        }
+      })
+      .filter(Boolean)
+      .join(' '),
+  };
+}
+
 function compiler(tree) {
   const snippets = {};
   visit(tree, 'code', (codeNode, index, { children }) => {
@@ -46,38 +76,19 @@ function compiler(tree) {
         if (children[i].type === 'code') {
           break;
         }
-        const inlineCode = find(children[i], { type: 'inlineCode' });
-        if (inlineCode) {
-          prefix = inlineCode.value;
-        }
         if (children[i].type === 'heading') {
-          const prefixInHeading = find(children[i], {
-            type: 'inlineCode',
-          })?.value;
-
-          if (prefixInHeading) {
-            prefix = prefixInHeading;
-            name = children[i].children
-              .map((headingChild) => {
-                if (headingChild.type === 'text') {
-                  return headingChild.value
-                    .replace(/\)\.$/, '')
-                    .replace(')', '')
-                    .replace('(', '')
-                    .replace(/^\. /, '')
-                    .trim();
-                }
-              })
-              .filter(Boolean)
-              .join(' ');
-          } else {
-            name = children[i].children[0].value;
-          }
+          const { text, code } = extractFromTextGroup(children[i]);
+          name = text;
+          prefix = prefix || code;
           break;
-        }
-        if (children[i].type === 'paragraph') {
-          if (children[i].children[0].type === 'text') {
-            description = children[i].children[0].value;
+        } else if (children[i].type === 'paragraph') {
+          const { text, code } = extractFromTextGroup(children[i]);
+          description = text || description;
+          prefix = prefix || code;
+        } else if (children[i].type === 'blockquote') {
+          const inlineCode = find(children[i], { type: 'inlineCode' });
+          if (inlineCode) {
+            prefix = inlineCode.value;
           }
         }
         i--;

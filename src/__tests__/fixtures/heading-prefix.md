@@ -1,4 +1,6 @@
-### Prefix at end with parens (`lg`)
+### Prefix at end with parens
+
+`lg`
 
 ```js
 console.log($1);

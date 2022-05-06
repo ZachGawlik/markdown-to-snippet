@@ -14,5 +14,20 @@
       "console.log(`$1: ${$1}`);"
     ],
     "scope": "javascript,javascriptreact"
+  },
+  "Prefix alone in description": {
+    "prefix": "lg",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix mixed in description": {
+    "description": "Logs the variable",
+    "prefix": "lg",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
   }
 }

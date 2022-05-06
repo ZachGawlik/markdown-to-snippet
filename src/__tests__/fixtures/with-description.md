@@ -21,3 +21,19 @@ Print variable name and value
 ```js
 console.log(`$1: ${$1}`);
 ```
+
+### Prefix alone in description
+
+`lg`
+
+```js
+console.log($1);
+```
+
+### Prefix mixed in description
+
+`lg`. Logs the variable
+
+```js
+console.log($1);
+```
