@@ -39,22 +39,41 @@ function compiler(tree) {
   const snippets = {};
   visit(tree, 'code', (codeNode, index, { children }) => {
     try {
-      let name, description, prefixNode;
+      let name, description, prefix;
 
       let i = index - 1;
       while (!name && i >= 0) {
         if (children[i].type === 'code') {
           break;
         }
+        const inlineCode = find(children[i], { type: 'inlineCode' });
+        if (inlineCode) {
+          prefix = inlineCode.value;
+        }
         if (children[i].type === 'heading') {
-          if (children[i].children[0].type === 'text') {
+          const prefixInHeading = find(children[i], {
+            type: 'inlineCode',
+          })?.value;
+
+          if (prefixInHeading) {
+            prefix = prefixInHeading;
+            name = children[i].children
+              .map((headingChild) => {
+                if (headingChild.type === 'text') {
+                  return headingChild.value
+                    .replace(/\)\.$/, '')
+                    .replace(')', '')
+                    .replace('(', '')
+                    .replace(/^\. /, '')
+                    .trim();
+                }
+              })
+              .filter(Boolean)
+              .join(' ');
+          } else {
             name = children[i].children[0].value;
           }
           break;
-        }
-        const inlineCode = find(children[i], { type: 'inlineCode' });
-        if (inlineCode) {
-          prefixNode = inlineCode;
         }
         if (children[i].type === 'paragraph') {
           if (children[i].children[0].type === 'text') {
@@ -74,14 +93,14 @@ function compiler(tree) {
       if (description) {
         snippets[name].description = description;
       }
-      snippets[name].prefix = prefixNode.value;
+      snippets[name].prefix = prefix;
       snippets[name].body = codeNode.value.split('\n');
       snippets[name].scope = getScope(codeNode).scope;
     } catch (e) {
       if (e instanceof KnownError) {
         throw e;
       }
-      throw new Error('Yikes, couldnt parse');
+      throw new Error(e);
     }
   });
   return JSON.stringify(snippets, null, 2);

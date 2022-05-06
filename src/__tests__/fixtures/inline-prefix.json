@@ -1,0 +1,37 @@
+{
+  "Prefix at end with parens": {
+    "prefix": "lg",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix at end without parens": {
+    "prefix": "lg",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix at start with parens": {
+    "prefix": "lg",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix at start without parens": {
+    "prefix": "lg",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix at start with period": {
+    "prefix": "lg",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  }
+}
