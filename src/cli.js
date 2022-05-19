@@ -4,6 +4,7 @@
 import { constants as FS_MODES } from 'fs';
 import { access, writeFile as _writeFile, mkdir } from 'fs/promises';
 import { dirname } from 'path';
+import chalkTemplate from 'chalk-template';
 import { chalkStderr } from 'chalk';
 import { program } from 'commander';
 import logSymbols from 'log-symbols';
@@ -16,7 +17,7 @@ const pathExists = (file, mode) =>
     .catch(() => false);
 
 const exitError = (errorString) => {
-  console.error(chalkStderr`{red ${logSymbols.error} ${errorString.trim()}}`);
+  console.error(chalkStderr.red(`${logSymbols.error} ${errorString.trim()}`));
   process.exit(1);
 };
 
@@ -34,11 +35,11 @@ const writeFile = (filepath, data) =>
   });
 
 program
-  .arguments('<snippets.md> [destination.json]')
+  .arguments('<snippets.md> [generated-output.code-snippet]')
   .action(async function runMarkdownToSnippet(inputFile, outputFile) {
     if (!['.md', '.markdown'].some((ext) => inputFile.endsWith(ext))) {
       exitError(
-        chalkStderr`Expected {italic ${inputFile}} to be a {bold .md} file`
+        chalkTemplate`Expected {italic ${inputFile}} to be a {bold .md} file`
       );
     }
 
@@ -47,10 +48,15 @@ program
       snippet = await markdownToSnippet(inputFile);
     } catch (e) {
       if (e instanceof KnownError) {
-        exitError(chalkStderr`${e}`);
+        exitError(e.toString());
       }
       console.error(
-        chalkStderr`An error was encountered when parsing the markdown file`
+        chalkStderr.red`An unexpected error occurred while processing your markdown file.`
+      );
+      console.error(
+        chalkStderr.red(
+          chalkTemplate`Please file an issue at {italic https://github.com/ZachGawlik/markdown-to-snippet/issues} with your markdown file's content`
+        )
       );
       throw new Error(e);
     }
@@ -61,21 +67,24 @@ program
       return;
     }
 
-    if (!outputFile.endsWith('.json')) {
+    if (
+      !outputFile.endsWith('.json') &&
+      !outputFile.endsWith('.code-snippets')
+    ) {
       exitError(
-        chalkStderr`Expected {italic ${outputFile}} to be a {bold .json} file`
+        chalkTemplate`Expected {italic ${outputFile}} to be a {underline .json} or {underline .code-snippets} file`
       );
     }
 
     try {
       writeFile(outputFile, snippet);
-      console.log(
-        chalkStderr`
-          {green ${logSymbols.success} Snippets have been written to {italic ${outputFile}}}
-        `.trim()
+      console.error(
+        chalkStderr.green(
+          chalkTemplate`${logSymbols.success} Snippets have been written to {italic ${outputFile}}`
+        )
       );
     } catch (err) {
-      exitError(chalkStderr`Failed to write to file ${err}`);
+      exitError(`Failed to write to file ${err}`);
     }
   });
 

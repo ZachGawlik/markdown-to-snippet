@@ -9,7 +9,6 @@ import report from 'vfile-reporter';
 import markdownToVscodeLang from './markdownToVscodeLang.js';
 import {
   MarkdownParsingError,
-  KnownError,
   FileDoesNotExist,
   UserInputError,
 } from './errors.js';
@@ -76,53 +75,46 @@ function compiler(tree) {
   const snippets = {};
 
   visit(tree, 'code', (codeNode, index, { children }) => {
-    try {
-      let name, description, prefix;
+    let name, description, prefix;
 
-      let i = index - 1;
-      while (!name && i >= 0) {
-        if (children[i].type === 'code') {
-          break;
+    let i = index - 1;
+    while (!name && i >= 0) {
+      if (children[i].type === 'code') {
+        break;
+      }
+      if (children[i].type === 'heading') {
+        const { text, code } = extractFromTextGroup(children[i]);
+        name = text;
+        prefix = prefix || code;
+        break;
+      } else if (children[i].type === 'paragraph') {
+        const { text, code } = extractFromTextGroup(children[i]);
+        description = text || description;
+        prefix = prefix || code;
+      } else if (children[i].type === 'blockquote') {
+        const inlineCode = find(children[i], { type: 'inlineCode' });
+        if (inlineCode) {
+          prefix = inlineCode.value;
         }
-        if (children[i].type === 'heading') {
-          const { text, code } = extractFromTextGroup(children[i]);
-          name = text;
-          prefix = prefix || code;
-          break;
-        } else if (children[i].type === 'paragraph') {
-          const { text, code } = extractFromTextGroup(children[i]);
-          description = text || description;
-          prefix = prefix || code;
-        } else if (children[i].type === 'blockquote') {
-          const inlineCode = find(children[i], { type: 'inlineCode' });
-          if (inlineCode) {
-            prefix = inlineCode.value;
-          }
-        }
-        i--;
       }
+      i--;
+    }
 
-      if (!name) {
-        throw new MarkdownParsingError('Could not find heading for snippet', {
-          snippet: codeNode.value,
-        });
-      }
+    if (!name) {
+      throw new MarkdownParsingError('Could not find heading for snippet', {
+        snippet: codeNode.value,
+      });
+    }
 
-      snippets[name] = {};
-      if (description) {
-        snippets[name].description = description;
-      }
-      snippets[name].prefix = prefix;
-      snippets[name].body = codeNode.value.split('\n');
-      const scope = getScope(getMdLangs(codeNode));
-      if (scope) {
-        snippets[name].scope = scope;
-      }
-    } catch (e) {
-      if (e instanceof KnownError) {
-        throw e;
-      }
-      throw e;
+    snippets[name] = {};
+    if (description) {
+      snippets[name].description = description;
+    }
+    snippets[name].prefix = prefix;
+    snippets[name].body = codeNode.value.split('\n');
+    const scope = getScope(getMdLangs(codeNode));
+    if (scope) {
+      snippets[name].scope = scope;
     }
   });
 
