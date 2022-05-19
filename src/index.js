@@ -127,9 +127,9 @@ function compiler(tree) {
 
     if (scopesForPrefix.includes('') && scopesForPrefix.length > 1) {
       throw new UserInputError(
-        `Prefix ${prefix} is defined both globally and for scopes ${scopesForPrefix.join(
-          ', '
-        )}`
+        `Prefix ${prefix} is defined both globally and for scopes ${scopesForPrefix
+          .filter(Boolean)
+          .join(', ')}`
       );
     }
 
