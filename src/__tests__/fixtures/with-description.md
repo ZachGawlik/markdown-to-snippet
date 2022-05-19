@@ -6,7 +6,7 @@
 
 Print statement
 
-> prefix: `lg`
+> prefix: `lg1`
 
 ```js
 console.log($1);
@@ -24,7 +24,7 @@ console.log(`$1: ${$1}`);
 
 ### Prefix alone in description
 
-`lg`
+`lg2`
 
 ```js
 console.log($1);
@@ -32,7 +32,7 @@ console.log($1);
 
 ### Prefix mixed in description
 
-`lg`. Logs the variable
+`lg3`. Logs the variable
 
 ```js
 console.log($1);

@@ -4,6 +4,6 @@
     "body": [
       "console.log($1);"
     ],
-    "scope": "javascript,javascriptreact"
+    "scope": "javascript,javascriptreact,typescript,typescriptreact"
   }
 }

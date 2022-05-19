@@ -1,3 +1,4 @@
+import { countBy, groupBy } from 'lodash-es';
 import { readFile } from 'fs/promises';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
@@ -10,12 +11,14 @@ import {
   MarkdownParsingError,
   KnownError,
   FileDoesNotExist,
+  UserInputError,
 } from './errors.js';
 
-const getScope = (codeNode) => {
+const getMdLangs = (codeNode) => {
   if (!codeNode.lang) {
-    return {};
+    return null;
   }
+
   const languages = [codeNode.lang.toLowerCase()];
   if (codeNode.meta) {
     languages.push(
@@ -25,14 +28,17 @@ const getScope = (codeNode) => {
         .map((l) => l.trim().toLowerCase())
     );
   }
+  return languages;
+};
 
-  const scopes = languages.map(
+const getScope = (mdLangs) => {
+  const scopes = (mdLangs || []).map(
     (lang) =>
       markdownToVscodeLang[lang] ||
       // Fallback to support language scopes added by vscode extensions
       lang
   );
-  return { scope: scopes.join(',') };
+  return scopes.join(',');
 };
 
 function extractFromTextGroup(textGroupNode) {
@@ -42,7 +48,7 @@ function extractFromTextGroup(textGroupNode) {
 
   if (!code) {
     return {
-      text: textGroupNode.children[0].value,
+      text: textGroupNode.children[0].value.trim().replace(/:$/, ''),
     };
   }
 
@@ -61,12 +67,14 @@ function extractFromTextGroup(textGroupNode) {
         }
       })
       .filter(Boolean)
-      .join(' '),
+      .join(' ')
+      .replace(/:$/, ''),
   };
 }
 
 function compiler(tree) {
   const snippets = {};
+
   visit(tree, 'code', (codeNode, index, { children }) => {
     try {
       let name, description, prefix;
@@ -106,14 +114,58 @@ function compiler(tree) {
       }
       snippets[name].prefix = prefix;
       snippets[name].body = codeNode.value.split('\n');
-      snippets[name].scope = getScope(codeNode).scope;
+      const scope = getScope(getMdLangs(codeNode));
+      if (scope) {
+        snippets[name].scope = scope;
+      }
     } catch (e) {
       if (e instanceof KnownError) {
         throw e;
       }
-      throw new Error(e);
+      throw e;
     }
   });
+
+  const snippetsByPrefix = groupBy(snippets, (snippet) => snippet.prefix);
+
+  Object.entries(snippetsByPrefix).forEach(([prefix, snippetsForPrefix]) => {
+    const scopesForPrefix = snippetsForPrefix.flatMap((snippet) =>
+      (snippet.scope || '').split(',')
+    );
+
+    if (scopesForPrefix.includes('') && scopesForPrefix.length > 1) {
+      throw new UserInputError(
+        `Prefix ${prefix} is defined both globally and for scopes ${scopesForPrefix.join(
+          ', '
+        )}`
+      );
+    }
+
+    const duplicatedScopes = Object.entries(countBy(scopesForPrefix))
+      .filter(
+        // eslint-disable-next-line no-unused-vars
+        ([scope, count]) => count > 1
+      )
+      .map(([scope]) => scope);
+
+    if (duplicatedScopes.length > 0) {
+      throw new UserInputError(
+        `Prefix ${prefix} is defined multiple times for scope ${duplicatedScopes.join(
+          ', '
+        )}`
+      );
+    }
+    if (
+      !scopesForPrefix.includes('typescript') &&
+      scopesForPrefix.includes('javascript')
+    ) {
+      const jsSnippetForPrefix = snippetsForPrefix.find((snippet) =>
+        snippet.scope.includes('javascript')
+      );
+      jsSnippetForPrefix.scope = `${jsSnippetForPrefix.scope},${markdownToVscodeLang['typescript']}`;
+    }
+  });
+
   return JSON.stringify(snippets, null, 2);
 }
 

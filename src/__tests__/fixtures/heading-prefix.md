@@ -1,30 +1,30 @@
 ### Prefix at end with parens
 
-`lg`
+`lg1`
 
 ```js
 console.log($1);
 ```
 
-### Prefix at end without parens `lg`
+### Prefix at end without parens `lg2`
 
 ```js
 console.log($1);
 ```
 
-### (`lg`) Prefix at start with parens
+### (`lg3`) Prefix at start with parens
 
 ```js
 console.log($1);
 ```
 
-### `lg` Prefix at start without parens
+### `lg4` Prefix at start without parens
 
 ```js
 console.log($1);
 ```
 
-### `lg`. Prefix at start with period
+### `lg5`. Prefix at start with period
 
 ```js
 console.log($1);

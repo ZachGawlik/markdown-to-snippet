@@ -14,6 +14,12 @@ export class FileDoesNotExist extends KnownError {
 
 export class MarkdownParsingError extends KnownError {
   toString() {
-    return `${this.message}\n${this.extra.snippet}`;
+    return `${this.message}\n${this.extra?.snippet}`;
+  }
+}
+
+export class UserInputError extends KnownError {
+  toString() {
+    return `${this.message}`;
   }
 }

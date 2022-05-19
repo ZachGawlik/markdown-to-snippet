@@ -1,0 +1,23 @@
+{
+  "JS snippet that will have TS auto-added": {
+    "prefix": "lg",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact,typescript,typescriptreact"
+  },
+  "JS snippet that won't have TS auto-added": {
+    "prefix": "usr",
+    "body": [
+      "const ${1} = useRef(${2:null});"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "JS snippet's separate TS version": {
+    "prefix": "usr",
+    "body": [
+      "const ${1} = useRef<$2>(${3:null});"
+    ],
+    "scope": "typescript,typescriptreact"
+  }
+}
