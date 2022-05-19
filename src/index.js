@@ -101,9 +101,13 @@ function compiler(tree) {
     }
 
     if (!name) {
-      throw new MarkdownParsingError('Could not find heading for snippet', {
-        snippet: codeNode.value,
-      });
+      throw new MarkdownParsingError(
+        `Could not find heading for snippet\n${codeNode.value}`
+      );
+    }
+    if (snippets[name]) {
+      // Constrained by VSCode's snippet format using name as the object key
+      throw new MarkdownParsingError(`Found duplicate heading ${name}`);
     }
 
     snippets[name] = {};

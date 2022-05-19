@@ -6,20 +6,8 @@ export class KnownError extends Error {
   }
 }
 
-export class FileDoesNotExist extends KnownError {
-  toString() {
-    return `${this.message} ${this.extra.filepath}`;
-  }
-}
+export class FileDoesNotExist extends KnownError {}
 
-export class MarkdownParsingError extends KnownError {
-  toString() {
-    return `${this.message}\n${this.extra?.snippet}`;
-  }
-}
+export class MarkdownParsingError extends KnownError {}
 
-export class UserInputError extends KnownError {
-  toString() {
-    return `${this.message}`;
-  }
-}
+export class UserInputError extends KnownError {}

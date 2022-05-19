@@ -51,15 +51,24 @@ describe('Markdown to snippet', () => {
     test("Can't find heading - double code", async () => {
       await expect(() =>
         markdownToSnippet(errorFile('cant-find-heading-double-code.md'))
-      ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"Could not find heading for snippet"`
-      );
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`
+              "Could not find heading for snippet
+              const \${1} = useRef<$2>(\${3:null});"
+            `);
     });
     test("Can't find heading - none", async () => {
       await expect(() =>
         markdownToSnippet(errorFile('cant-find-heading-none.md'))
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`
+              "Could not find heading for snippet
+              console.log($1);"
+            `);
+    });
+    test('Duplicated heading', async () => {
+      await expect(() =>
+        markdownToSnippet(errorFile('duplicated-heading.md'))
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"Could not find heading for snippet"`
+        `"Found duplicate heading Use Ref"`
       );
     });
     test('Duplicated scopes, one global', async () => {
