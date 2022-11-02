@@ -1,7 +1,3 @@
-# My snippets
-
-## Logs
-
 ### Log
 
 Print statement

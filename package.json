@@ -9,6 +9,7 @@
     "prepare": "husky install",
     "commit": "cz",
     "lint": "eslint .",
+    "lint:ci": "NODE_ENV=production eslint .",
     "test": "yarn node --experimental-vm-modules $(yarn bin jest)"
   },
   "repository": {

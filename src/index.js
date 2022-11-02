@@ -1,7 +1,7 @@
+import { visit } from 'unist-util-visit';
 import { countBy, groupBy } from 'lodash-es';
 import { readFile } from 'fs/promises';
 import { unified } from 'unified';
-import { visit } from 'unist-util-visit';
 import find from 'unist-util-find';
 import markdown from 'remark-parse';
 import gfm from 'remark-gfm';
@@ -74,37 +74,49 @@ function extractFromTextGroup(textGroupNode) {
 function compiler(tree) {
   const snippets = {};
 
-  visit(tree, 'code', (codeNode, index, { children }) => {
-    let name, description, prefix;
+  visit(tree, 'heading', (headingNode, index, { children: siblingNodes }) => {
+    let description, codeNode, prefix;
 
-    let i = index - 1;
-    while (!name && i >= 0) {
-      if (children[i].type === 'code') {
-        break;
+    for (let x = index + 1; x < siblingNodes.length; x++) {
+      if (
+        siblingNodes[x].type === 'heading' &&
+        siblingNodes[x].depth > headingNode.depth
+      ) {
+        return;
       }
-      if (children[i].type === 'heading') {
-        const { text, code } = extractFromTextGroup(children[i]);
-        name = text;
-        prefix = prefix || code;
+    }
+
+    const { text: headingText, code } = extractFromTextGroup(headingNode);
+    const name = headingText;
+    prefix = code;
+    let i = index + 1;
+    while (i < siblingNodes.length) {
+      const sibling = siblingNodes[i];
+      if (sibling.type === 'heading') {
         break;
-      } else if (children[i].type === 'paragraph') {
-        const { text, code } = extractFromTextGroup(children[i]);
-        description = text || description;
-        prefix = prefix || code;
-      } else if (children[i].type === 'blockquote') {
-        const inlineCode = find(children[i], { type: 'inlineCode' });
+      } else if (sibling.type === 'paragraph') {
+        const { text, code } = extractFromTextGroup(sibling);
+        if (!description) {
+          description = text;
+        }
+        if (!prefix) {
+          prefix = code;
+        }
+      } else if (sibling.type === 'blockquote') {
+        const inlineCode = find(sibling, { type: 'inlineCode' });
         if (inlineCode) {
           prefix = inlineCode.value;
         }
+      } else if (sibling.type === 'code') {
+        codeNode = sibling;
       }
-      i--;
+      i++;
     }
 
-    if (!name) {
-      throw new MarkdownParsingError(
-        `Could not find heading for snippet\n${codeNode.value}`
-      );
+    if (!prefix) {
+      return;
     }
+
     if (snippets[name]) {
       // Constrained by VSCode's snippet format using name as the object key
       throw new MarkdownParsingError(`Found duplicate heading ${name}`);

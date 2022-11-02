@@ -1,3 +1,7 @@
+# Headings with lower subheadings get `ignored`
+
+## Headings with lower subheadings get `ignored`
+
 ### Prefix at end with parens
 
 `lg1`
@@ -18,13 +22,13 @@ console.log($1);
 console.log($1);
 ```
 
-### `lg4` Prefix at start without parens
+## `lg4` Prefix at start without parens
 
 ```js
 console.log($1);
 ```
 
-### `lg5`. Prefix at start with period
+## `lg5`. Prefix at start with period
 
 ```js
 console.log($1);

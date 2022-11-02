@@ -17,7 +17,11 @@ module.exports = {
     'plugin:prettier/recommended',
   ],
   rules: {
-    'no-console': ['error', { allow: ['error'] }],
+    'no-console':
+      process.env.NODE_ENV === 'production'
+        ? ['error', { allow: ['error'] }]
+        : 'off',
+    'no-unused-vars': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
     'no-var': 'error',
     'prefer-const': 'error',
   },
