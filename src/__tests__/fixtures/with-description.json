@@ -5,7 +5,7 @@
     "body": [
       "console.log($1);"
     ],
-    "scope": "javascript,javascriptreact,typescript,typescriptreact"
+    "scope": "javascript,javascriptreact"
   },
   "Log variable": {
     "description": "Print variable name and value",
@@ -13,14 +13,14 @@
     "body": [
       "console.log(`$1: ${$1}`);"
     ],
-    "scope": "javascript,javascriptreact,typescript,typescriptreact"
+    "scope": "javascript,javascriptreact"
   },
   "Prefix alone in description": {
     "prefix": "lg2",
     "body": [
       "console.log($1);"
     ],
-    "scope": "javascript,javascriptreact,typescript,typescriptreact"
+    "scope": "javascript,javascriptreact"
   },
   "Prefix mixed in description": {
     "description": "Logs the variable",
@@ -28,6 +28,6 @@
     "body": [
       "console.log($1);"
     ],
-    "scope": "javascript,javascriptreact,typescript,typescriptreact"
+    "scope": "javascript,javascriptreact"
   }
 }

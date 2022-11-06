@@ -11,22 +11,22 @@ import logSymbols from 'log-symbols';
 import { markdownToSnippet } from './index.js';
 import { KnownError } from './errors.js';
 
-const pathExists = (file, mode) =>
+const pathExists = (file: string, mode: number) =>
   access(file, mode)
     .then(() => true)
     .catch(() => false);
 
-const exitError = (errorString) => {
+const exitError = (errorString: string) => {
   console.error(chalkStderr.red(`${logSymbols.error} ${errorString.trim()}`));
   process.exit(1);
 };
 
 // Write file, creating one intermediate directory if necessary
-const writeFile = (filepath, data) =>
+const writeFile = (filepath: string, data: string) =>
   _writeFile(filepath, data).catch(async (err) => {
     if (
       err.code === 'ENOENT' &&
-      (await pathExists(dirname(dirname(filepath), FS_MODES.W_OK)))
+      (await pathExists(dirname(dirname(filepath)), FS_MODES.W_OK))
     ) {
       await mkdir(dirname(filepath));
       return _writeFile(filepath, data);
@@ -58,7 +58,9 @@ program
           chalkTemplate`Please file an issue at {italic https://github.com/ZachGawlik/markdown-to-snippet/issues} with your markdown file's content`
         )
       );
-      throw new Error(e);
+      if (e instanceof Error) {
+        throw e;
+      }
     }
 
     if (!outputFile) {
@@ -77,7 +79,7 @@ program
     }
 
     try {
-      writeFile(outputFile, snippet);
+      writeFile(outputFile, snippet as string);
       console.error(
         chalkStderr.green(
           chalkTemplate`${logSymbols.success} Snippets have been written to {italic ${outputFile}}`

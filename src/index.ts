@@ -1,11 +1,12 @@
+import { readFile } from 'fs/promises';
 import { visit } from 'unist-util-visit';
 import { countBy, groupBy } from 'lodash-es';
-import { readFile } from 'fs/promises';
-import { unified } from 'unified';
-import find from 'unist-util-find';
+import { unified, Plugin, CompilerFunction } from 'unified';
 import markdown from 'remark-parse';
 import gfm from 'remark-gfm';
-import report from 'vfile-reporter';
+import type { Code, Heading, InlineCode, Paragraph, Root } from 'mdast';
+import { toString } from 'mdast-util-to-string';
+import { select } from 'unist-util-select';
 import markdownToVscodeLang from './markdownToVscodeLang.js';
 import {
   MarkdownParsingError,
@@ -13,7 +14,7 @@ import {
   UserInputError,
 } from './errors.js';
 
-const getMdLangs = (codeNode) => {
+const getMdLangs = (codeNode: Code) => {
   if (!codeNode.lang) {
     return null;
   }
@@ -30,7 +31,7 @@ const getMdLangs = (codeNode) => {
   return languages;
 };
 
-const getScope = (mdLangs) => {
+const getScope = (mdLangs: string[] | null) => {
   const scopes = (mdLangs || []).map(
     (lang) =>
       markdownToVscodeLang[lang] ||
@@ -40,14 +41,13 @@ const getScope = (mdLangs) => {
   return scopes.join(',');
 };
 
-function extractFromTextGroup(textGroupNode) {
-  const code = find(textGroupNode, {
-    type: 'inlineCode',
-  })?.value;
+function extractFromTextGroup(textGroupNode: Heading | Paragraph) {
+  const code = (select('inlineCode', textGroupNode) as InlineCode | null)
+    ?.value;
 
   if (!code) {
     return {
-      text: textGroupNode.children[0].value.trim().replace(/:$/, ''),
+      text: toString(textGroupNode).replace(/:$/, ''),
     };
   }
 
@@ -71,17 +71,27 @@ function extractFromTextGroup(textGroupNode) {
   };
 }
 
-function compiler(tree) {
-  const snippets = {};
+type Snippet = {
+  description?: string;
+  prefix: string;
+  body: string[];
+  scope?: string;
+};
 
-  visit(tree, 'heading', (headingNode, index, { children: siblingNodes }) => {
+const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
+  const snippets: Record<string, Snippet> = {};
+
+  visit(tree, 'heading', (headingNode, index) => {
+    if (index === null) {
+      // not possible, as all mdASTs have 'root' root node
+      return;
+    }
+    const siblingNodes = tree.children;
     let description, codeNode, prefix;
 
     for (let x = index + 1; x < siblingNodes.length; x++) {
-      if (
-        siblingNodes[x].type === 'heading' &&
-        siblingNodes[x].depth > headingNode.depth
-      ) {
+      const sibling = siblingNodes[x];
+      if (sibling.type === 'heading' && sibling.depth > headingNode.depth) {
         return;
       }
     }
@@ -103,7 +113,7 @@ function compiler(tree) {
           prefix = code;
         }
       } else if (sibling.type === 'blockquote') {
-        const inlineCode = find(sibling, { type: 'inlineCode' });
+        const inlineCode = select('inlineCode', sibling) as InlineCode | null;
         if (inlineCode) {
           prefix = inlineCode.value;
         }
@@ -113,7 +123,7 @@ function compiler(tree) {
       i++;
     }
 
-    if (!prefix) {
+    if (!prefix || !codeNode) {
       return;
     }
 
@@ -122,16 +132,13 @@ function compiler(tree) {
       throw new MarkdownParsingError(`Found duplicate heading ${name}`);
     }
 
-    snippets[name] = {};
-    if (description) {
-      snippets[name].description = description;
-    }
-    snippets[name].prefix = prefix;
-    snippets[name].body = codeNode.value.split('\n');
-    const scope = getScope(getMdLangs(codeNode));
-    if (scope) {
-      snippets[name].scope = scope;
-    }
+    const newSnippet: Snippet = {
+      description: description || undefined,
+      prefix,
+      body: codeNode.value.split('\n'),
+      scope: getScope(getMdLangs(codeNode)) || undefined,
+    };
+    snippets[name] = newSnippet;
   });
 
   const snippetsByPrefix = groupBy(snippets, (snippet) => snippet.prefix);
@@ -150,10 +157,7 @@ function compiler(tree) {
     }
 
     const duplicatedScopes = Object.entries(countBy(scopesForPrefix))
-      .filter(
-        // eslint-disable-next-line no-unused-vars
-        ([scope, count]) => count > 1
-      )
+      .filter(([_a, count]) => count > 1)
       .map(([scope]) => scope);
 
     if (duplicatedScopes.length > 0) {
@@ -163,44 +167,37 @@ function compiler(tree) {
         )}`
       );
     }
-    if (
-      !scopesForPrefix.includes('typescript') &&
-      scopesForPrefix.includes('javascript')
-    ) {
-      const jsSnippetForPrefix = snippetsForPrefix.find((snippet) =>
-        snippet.scope.includes('javascript')
-      );
-      jsSnippetForPrefix.scope = `${jsSnippetForPrefix.scope},${markdownToVscodeLang['typescript']}`;
-    }
   });
 
   return JSON.stringify(snippets, null, 2);
+};
+
+function MyCompiler(this: Plugin<[], Root, string>) {
+  Object.assign(this, { Compiler: markdownToSnippetCompiler });
 }
 
-function markdownToSnippetCompiler() {
-  this.Compiler = compiler;
+function isErrnoException(e: unknown): e is NodeJS.ErrnoException {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ('code' in (e as any)) return true;
+  else return false;
 }
 
-export const markdownToSnippet = async (filepath) => {
+export const markdownToSnippet = async (filepath: string) => {
   let input;
   try {
     input = await readFile(filepath, 'utf8');
   } catch (e) {
-    if (e.code === 'ENOENT') {
+    if (isErrnoException(e) && e?.code === 'ENOENT') {
       throw new FileDoesNotExist(`File does not exist`, { filepath });
     }
-    throw new Error(e);
+    throw e;
   }
 
-  const res = unified()
+  const res = await unified()
     .use(markdown)
     .use(gfm)
-    .use(markdownToSnippetCompiler)
-    .processSync(input, function (err) {
-      if (err) {
-        console.error(report(err));
-      }
-    })
+    .use(MyCompiler)
+    .processSync(input)
     .toString();
   return res;
 };

@@ -1,4 +1,4 @@
-## JS snippet that will have TS auto-added
+## JS snippet that will have JSX auto-added
 
 > prefix: `lg`
 
@@ -6,15 +6,7 @@
 console.log($1);
 ```
 
-## JS snippet that won't have TS auto-added
-
-> prefix: `usr`
-
-```js
-const ${1} = useRef(${2:null});
-```
-
-## JS snippet's separate TS version
+## TS snippet that will have TSX auto-added
 
 > prefix: `usr`
 

@@ -17,7 +17,7 @@ References:
 
 */
 
-const markdownToVscodeLang = {
+const markdownToVscodeLang: Record<string, string> = {
   abap: 'abap',
 
   bat: 'bat',

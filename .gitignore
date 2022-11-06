@@ -3,11 +3,5 @@ node_modules
 .vscode
 *.log
 
-.yarn/*
-# .yarn/cache # I'm choosing to use zero-install
-!.yarn/patches
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
+lib
 todo.md

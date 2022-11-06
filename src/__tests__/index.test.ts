@@ -1,4 +1,4 @@
-import { markdownToSnippet } from '../index';
+import { markdownToSnippet } from '../index.js';
 import { readdirSync } from 'fs';
 import { readFile } from 'fs/promises';
 import path from 'path';
@@ -41,7 +41,7 @@ describe('Markdown to snippet', () => {
   });
 
   describe('Errors', () => {
-    const errorFile = (filename) =>
+    const errorFile = (filename: string) =>
       path.join(__dirname, 'error-fixtures', filename);
     test('Input file does not exist', async () => {
       await expect(() =>
