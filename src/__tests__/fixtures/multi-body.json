@@ -1,0 +1,30 @@
+{
+  "Snippet with two variations": {
+    "prefix": "usr",
+    "body": [
+      "const ${1} = useRef(${2:null});"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Snippet with two variations (ts)": {
+    "prefix": "usr",
+    "body": [
+      "const ${1} = useRef<$2>(${3:null});"
+    ],
+    "scope": "typescript,typescriptreact"
+  },
+  "Snippet with two variations and paragraph in between": {
+    "prefix": "uss",
+    "body": [
+      "const ${1} = useState(${2:null});"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Snippet with two variations and paragraph in between (ts)": {
+    "prefix": "uss",
+    "body": [
+      "const ${1} = useState<$2>(${3:null});"
+    ],
+    "scope": "typescript,typescriptreact"
+  }
+}

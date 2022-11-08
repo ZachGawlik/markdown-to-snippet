@@ -69,5 +69,12 @@ describe('Markdown to snippet', () => {
         `"Prefix usr is defined multiple times for scope typescript, typescriptreact"`
       );
     });
+    test('Duplicated scopes, multi-def', async () => {
+      await expect(() =>
+        markdownToSnippet(errorFile('duplicated-scopes-multi-def.md'))
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"Prefix usr is defined multiple times for scope typescript, typescriptreact"`
+      );
+    });
   });
 });

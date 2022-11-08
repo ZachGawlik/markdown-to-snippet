@@ -42,18 +42,18 @@ const getScope = (mdLangs: string[] | null) => {
 };
 
 function extractFromTextGroup(textGroupNode: Heading | Paragraph) {
-  const code = (select('inlineCode', textGroupNode) as InlineCode | null)
+  const inlineCode = (select('inlineCode', textGroupNode) as InlineCode | null)
     ?.value;
 
-  if (!code) {
+  if (!inlineCode) {
     return {
       text: toString(textGroupNode).replace(/:$/, ''),
     };
   }
 
-  // strip common chars used for separating code vs text
+  // strip common chars used for separating inlineCode vs text
   return {
-    code,
+    inlineCode,
     text: textGroupNode.children
       .map((headingChild) => {
         if (headingChild.type === 'text') {
@@ -72,7 +72,6 @@ function extractFromTextGroup(textGroupNode: Heading | Paragraph) {
 }
 
 type Snippet = {
-  description?: string;
   prefix: string;
   body: string[];
   scope?: string;
@@ -87,7 +86,7 @@ const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
       return;
     }
     const siblingNodes = tree.children;
-    let description, codeNode, prefix;
+    const codeNodes: Code[] = [];
 
     for (let x = index + 1; x < siblingNodes.length; x++) {
       const sibling = siblingNodes[x];
@@ -96,21 +95,18 @@ const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
       }
     }
 
-    const { text: headingText, code } = extractFromTextGroup(headingNode);
+    const { text: headingText, inlineCode } = extractFromTextGroup(headingNode);
     const name = headingText;
-    prefix = code;
+    let prefix = inlineCode;
     let i = index + 1;
     while (i < siblingNodes.length) {
       const sibling = siblingNodes[i];
       if (sibling.type === 'heading') {
         break;
       } else if (sibling.type === 'paragraph') {
-        const { text, code } = extractFromTextGroup(sibling);
-        if (!description) {
-          description = text;
-        }
+        const { inlineCode } = extractFromTextGroup(sibling);
         if (!prefix) {
-          prefix = code;
+          prefix = inlineCode;
         }
       } else if (sibling.type === 'blockquote') {
         const inlineCode = select('inlineCode', sibling) as InlineCode | null;
@@ -118,12 +114,12 @@ const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
           prefix = inlineCode.value;
         }
       } else if (sibling.type === 'code') {
-        codeNode = sibling;
+        codeNodes.push(sibling);
       }
       i++;
     }
 
-    if (!prefix || !codeNode) {
+    if (!prefix || codeNodes.length === 0) {
       return;
     }
 
@@ -132,13 +128,16 @@ const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
       throw new MarkdownParsingError(`Found duplicate heading ${name}`);
     }
 
-    const newSnippet: Snippet = {
-      description: description || undefined,
-      prefix,
-      body: codeNode.value.split('\n'),
-      scope: getScope(getMdLangs(codeNode)) || undefined,
-    };
-    snippets[name] = newSnippet;
+    const p = prefix;
+    codeNodes.forEach((codeNode, index) => {
+      const mdLangs = getMdLangs(codeNode);
+      const newSnippet: Snippet = {
+        prefix: p,
+        body: codeNode.value.split('\n'),
+        scope: getScope(mdLangs) || undefined,
+      };
+      snippets[index === 0 ? name : `${name} (${mdLangs})`] = newSnippet;
+    });
   });
 
   const snippetsByPrefix = groupBy(snippets, (snippet) => snippet.prefix);
