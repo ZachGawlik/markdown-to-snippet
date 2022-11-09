@@ -161,4 +161,12 @@ const markdownToVscodeLang: Record<string, string> = {
   yml: 'yaml',
 };
 
-export default markdownToVscodeLang;
+export const getVscodeScope = (mdLangs: string[]) => {
+  const scopes = (mdLangs || []).map(
+    (lang) =>
+      markdownToVscodeLang[lang] ||
+      // Fallback to support language scopes added by vscode extensions
+      lang
+  );
+  return scopes.join(',');
+};
