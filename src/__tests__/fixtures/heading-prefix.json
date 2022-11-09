@@ -1,34 +1,62 @@
 {
-  "Prefix at end with parens": {
+  "Prefix not in the heading": {
     "prefix": "lg1",
     "body": [
       "console.log($1);"
     ],
     "scope": "javascript,javascriptreact"
   },
-  "Prefix at end without parens": {
-    "prefix": "lg2",
+  "Prefix at end": {
+    "prefix": "lge1",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix at end with parens": {
+    "prefix": "lge2",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix at end with colon": {
+    "prefix": "lge3",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix at start": {
+    "prefix": "lgs1",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Prefix at start with colon": {
+    "prefix": "lgs2",
     "body": [
       "console.log($1);"
     ],
     "scope": "javascript,javascriptreact"
   },
   "Prefix at start with parens": {
-    "prefix": "lg3",
-    "body": [
-      "console.log($1);"
-    ],
-    "scope": "javascript,javascriptreact"
-  },
-  "Prefix at start without parens": {
-    "prefix": "lg4",
+    "prefix": "lgs3",
     "body": [
       "console.log($1);"
     ],
     "scope": "javascript,javascriptreact"
   },
   "Prefix at start with period": {
-    "prefix": "lg5",
+    "prefix": "lgs4",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Heading formatting does not make its way to snippet name": {
+    "prefix": "lgf",
     "body": [
       "console.log($1);"
     ],

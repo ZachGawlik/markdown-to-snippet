@@ -6,7 +6,7 @@
 npm install
 ```
 
-### Prefix at end with parens
+### Prefix not in the heading
 
 `lg1`
 
@@ -14,25 +14,51 @@ npm install
 console.log($1);
 ```
 
-### Prefix at end without parens `lg2`
+### Prefix at end `lge1`
 
 ```js
 console.log($1);
 ```
 
-### (`lg3`) Prefix at start with parens
+### Prefix at end with parens (`lge2`)
 
 ```js
 console.log($1);
 ```
 
-## `lg4` Prefix at start without parens
+### Prefix at end with colon: `lge3`
 
 ```js
 console.log($1);
 ```
 
-## `lg5`. Prefix at start with period
+### `lgs1` Prefix at start
+
+```js
+console.log($1);
+```
+
+### `lgs2`: Prefix at start with colon
+
+```js
+console.log($1);
+```
+
+### (`lgs3`) Prefix at start with parens
+
+```js
+console.log($1);
+```
+
+### `lgs4`. Prefix at start with period
+
+```js
+console.log($1);
+```
+
+### Heading _formatting_ does **not** [make](#) its way to snippet name
+
+`lgf`
 
 ```js
 console.log($1);

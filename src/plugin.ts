@@ -11,6 +11,7 @@ import type {
 import { toString } from 'mdast-util-to-string';
 import { select } from 'unist-util-select';
 import { zone } from 'mdast-zone';
+import { remove } from 'unist-util-remove';
 import { getVscodeScope } from './markdownToVscodeLang.js';
 import { MarkdownParsingError, UserInputError } from './errors.js';
 
@@ -45,30 +46,21 @@ const getMdLangs = (codeNode: Code) => {
 function extractFromTextGroup(textGroupNode: Heading | Paragraph) {
   const inlineCode = (select('inlineCode', textGroupNode) as InlineCode | null)
     ?.value;
+  remove(textGroupNode, 'inlineCode');
+  const headingText = toString(textGroupNode).trim().replace(/:/, '');
 
   if (!inlineCode) {
-    return {
-      text: toString(textGroupNode).replace(/:$/, ''),
-    };
+    return { text: headingText };
   }
-
-  // strip common chars used for separating inlineCode vs text
   return {
     inlineCode,
-    text: textGroupNode.children
-      .map((headingChild) => {
-        if (headingChild.type === 'text') {
-          return headingChild.value
-            .replace(/\)\.$/, '')
-            .replace(')', '')
-            .replace('(', '')
-            .replace(/^\. /, '')
-            .trim();
-        }
-      })
-      .filter(Boolean)
-      .join(' ')
-      .replace(/:$/, ''),
+    text: headingText
+      .replace(/^\./, '')
+      .replace(/\.$/, '')
+      .replace(/^:/, '')
+      .replace(')', '')
+      .replace('(', '')
+      .trim(),
   };
 }
 
