@@ -1,10 +1,16 @@
 import { readFile } from 'fs/promises';
-import { visit } from 'unist-util-visit';
 import { countBy, groupBy } from 'lodash-es';
 import { unified, Plugin, CompilerFunction } from 'unified';
 import markdown from 'remark-parse';
 import gfm from 'remark-gfm';
-import type { Code, Heading, InlineCode, Paragraph, Root } from 'mdast';
+import type {
+  BlockContent,
+  Code,
+  Heading,
+  InlineCode,
+  Paragraph,
+  Root,
+} from 'mdast';
 import { toString } from 'mdast-util-to-string';
 import { select } from 'unist-util-select';
 import markdownToVscodeLang from './markdownToVscodeLang.js';
@@ -16,7 +22,7 @@ import {
 
 const getMdLangs = (codeNode: Code) => {
   if (!codeNode.lang) {
-    return null;
+    return [];
   }
 
   const languages = [codeNode.lang.toLowerCase()];
@@ -31,7 +37,7 @@ const getMdLangs = (codeNode: Code) => {
   return languages;
 };
 
-const getScope = (mdLangs: string[] | null) => {
+const getScope = (mdLangs: string[]) => {
   const scopes = (mdLangs || []).map(
     (lang) =>
       markdownToVscodeLang[lang] ||
@@ -71,77 +77,99 @@ function extractFromTextGroup(textGroupNode: Heading | Paragraph) {
   };
 }
 
+type RawSnippet = {
+  prefix: string;
+  body: string[];
+  langs: string[];
+};
 type Snippet = {
   prefix: string;
   body: string[];
   scope?: string;
 };
 
-const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
-  const snippets: Record<string, Snippet> = {};
+type NonHeadingBlockContent = Exclude<BlockContent, Heading>;
+type NestedHeading = {
+  headingNode: Heading;
+  contents: NonHeadingBlockContent[];
+};
 
-  visit(tree, 'heading', (headingNode, index) => {
-    if (index === null) {
-      // not possible, as all mdASTs have 'root' root node
-      return;
-    }
-    const siblingNodes = tree.children;
-    const codeNodes: Code[] = [];
+const getLeafHeadings = (root: Root) => {
+  const nestedHeadings: NestedHeading[] = [];
 
-    for (let x = index + 1; x < siblingNodes.length; x++) {
-      const sibling = siblingNodes[x];
-      if (sibling.type === 'heading' && sibling.depth > headingNode.depth) {
-        return;
-      }
-    }
-
-    const { text: headingText, inlineCode } = extractFromTextGroup(headingNode);
-    const name = headingText;
-    let prefix = inlineCode;
-    let i = index + 1;
-    while (i < siblingNodes.length) {
-      const sibling = siblingNodes[i];
-      if (sibling.type === 'heading') {
-        break;
-      } else if (sibling.type === 'paragraph') {
-        const { inlineCode } = extractFromTextGroup(sibling);
-        if (!prefix) {
-          prefix = inlineCode;
-        }
-      } else if (sibling.type === 'blockquote') {
-        const inlineCode = select('inlineCode', sibling) as InlineCode | null;
-        if (inlineCode) {
-          prefix = inlineCode.value;
-        }
-      } else if (sibling.type === 'code') {
-        codeNodes.push(sibling);
-      }
-      i++;
-    }
-
-    if (!prefix || codeNodes.length === 0) {
-      return;
-    }
-
-    if (snippets[name]) {
-      // Constrained by VSCode's snippet format using name as the object key
-      throw new MarkdownParsingError(`Found duplicate heading ${name}`);
-    }
-
-    const p = prefix;
-    codeNodes.forEach((codeNode, index) => {
-      const mdLangs = getMdLangs(codeNode);
-      const newSnippet: Snippet = {
-        prefix: p,
-        body: codeNode.value.split('\n'),
-        scope: getScope(mdLangs) || undefined,
+  for (let i = 0; i < root.children.length; i += 1) {
+    const child = root.children[i];
+    const previousHeading =
+      nestedHeadings.length > 0 && nestedHeadings[nestedHeadings.length - 1];
+    if (child.type === 'heading') {
+      const newHeading: NestedHeading = {
+        headingNode: child,
+        contents: [],
       };
-      snippets[index === 0 ? name : `${name} (${mdLangs})`] = newSnippet;
+      if (previousHeading && previousHeading.headingNode.depth < child.depth) {
+        nestedHeadings[nestedHeadings.length - 1] = newHeading;
+      } else {
+        nestedHeadings.push(newHeading);
+      }
+    } else if (previousHeading) {
+      previousHeading.contents.push(child as NonHeadingBlockContent);
+    }
+  }
+  return nestedHeadings;
+};
+
+const getRawSnippetsByHeading = (nestedHeadings: NestedHeading[]) => {
+  const snippetsByHeading: Record<string, RawSnippet[]> = {};
+  nestedHeadings.map(({ headingNode, contents }) => {
+    const { text: snippetName, inlineCode } = extractFromTextGroup(headingNode);
+    if (snippetsByHeading[snippetName]) {
+      throw new MarkdownParsingError(
+        `Found duplicate heading ${snippetName}. Two snippets with the same name are impossible for VSCode's snippet format`
+      );
+    }
+
+    const snippetsForHeading: RawSnippet[] = [];
+    let prefix = inlineCode;
+    contents.forEach((content) => {
+      if (!prefix && ['blockquote', 'paragraph'].includes(content.type)) {
+        prefix = (select('inlineCode', content) as InlineCode | undefined)
+          ?.value;
+      } else if (prefix && content.type === 'code') {
+        snippetsForHeading.push({
+          prefix,
+          body: content.value.split('\n'),
+          langs: getMdLangs(content),
+        });
+      }
+    });
+    snippetsByHeading[snippetName] = snippetsForHeading;
+  });
+  return snippetsByHeading;
+};
+
+const formatSnippetForVsCode = (
+  rawSnippetsByHeading: Record<string, RawSnippet[]>
+) => {
+  const snippets: Record<string, Snippet> = {};
+  Object.entries(rawSnippetsByHeading).forEach(([snippetName, rawSnippets]) => {
+    rawSnippets.forEach(({ prefix, body, langs }, index) => {
+      const formattedSnippet = {
+        prefix,
+        body,
+        scope: getScope(langs) || undefined,
+      };
+      if (index === 0) {
+        snippets[snippetName] = formattedSnippet;
+      } else {
+        snippets[`${snippetName} (${langs.join(' ')})`] = formattedSnippet;
+      }
     });
   });
+  return snippets;
+};
 
+const assertOneSnippetPerPrefixLang = (snippets: Record<string, Snippet>) => {
   const snippetsByPrefix = groupBy(snippets, (snippet) => snippet.prefix);
-
   Object.entries(snippetsByPrefix).forEach(([prefix, snippetsForPrefix]) => {
     const scopesForPrefix = snippetsForPrefix.flatMap((snippet) =>
       (snippet.scope || '').split(',')
@@ -167,11 +195,17 @@ const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
       );
     }
   });
+};
 
+const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
+  const nestedHeadings = getLeafHeadings(tree);
+  const rawSnippetsByHeading = getRawSnippetsByHeading(nestedHeadings);
+  const snippets = formatSnippetForVsCode(rawSnippetsByHeading);
+  assertOneSnippetPerPrefixLang(snippets);
   return JSON.stringify(snippets, null, 2);
 };
 
-function MyCompiler(this: Plugin<[], Root, string>) {
+function MarkdownToSnippetPlugin(this: Plugin<[], Root, string>) {
   Object.assign(this, { Compiler: markdownToSnippetCompiler });
 }
 
@@ -195,7 +229,7 @@ export const markdownToSnippet = async (filepath: string) => {
   const res = await unified()
     .use(markdown)
     .use(gfm)
-    .use(MyCompiler)
+    .use(MarkdownToSnippetPlugin)
     .processSync(input)
     .toString();
   return res;

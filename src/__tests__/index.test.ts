@@ -52,7 +52,7 @@ describe('Markdown to snippet', () => {
       await expect(() =>
         markdownToSnippet(errorFile('duplicated-heading.md'))
       ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"Found duplicate heading Use Ref"`
+        `"Found duplicate heading Use Ref. Two snippets with the same name are impossible for VSCode's snippet format"`
       );
     });
     test('Duplicated scopes, one global', async () => {

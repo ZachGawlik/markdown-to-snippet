@@ -1,6 +1,10 @@
-# Headings with lower subheadings get `ignored`
+# Heading 1
 
-## Headings with lower subheadings get `ignored`
+## Headings with subheadings get `ignored`
+
+```js
+npm install
+```
 
 ### Prefix at end with parens
 
@@ -33,3 +37,13 @@ console.log($1);
 ```js
 console.log($1);
 ```
+
+## Leaf heading ignored for not having prefix
+
+```
+console.log($1);
+```
+
+## Leaf heading ignored for not having code block - `test`
+
+This should not appear in the json
