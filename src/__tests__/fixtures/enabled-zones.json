@@ -1,0 +1,16 @@
+{
+  "Log 2": {
+    "prefix": "lg2",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  },
+  "Log 4": {
+    "prefix": "lg4",
+    "body": [
+      "console.log($1);"
+    ],
+    "scope": "javascript,javascriptreact"
+  }
+}

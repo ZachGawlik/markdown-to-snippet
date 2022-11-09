@@ -4,7 +4,7 @@ import { unified, Plugin, CompilerFunction } from 'unified';
 import markdown from 'remark-parse';
 import gfm from 'remark-gfm';
 import type {
-  BlockContent,
+  TopLevelContent,
   Code,
   Heading,
   InlineCode,
@@ -13,12 +13,24 @@ import type {
 } from 'mdast';
 import { toString } from 'mdast-util-to-string';
 import { select } from 'unist-util-select';
+import { zone } from 'mdast-zone';
 import markdownToVscodeLang from './markdownToVscodeLang.js';
 import {
   MarkdownParsingError,
   FileDoesNotExist,
   UserInputError,
 } from './errors.js';
+
+const MD_ZONE_ID = 'markdown-to-snippet';
+
+// MDAST type defs miss that root.children can only be TopLevelContent[]
+const getEnabledZones = (root: Root) => {
+  const zones: TopLevelContent[][] = [];
+  zone(root, MD_ZONE_ID, (_, zoneContents) => {
+    zones.push(zoneContents as TopLevelContent[]);
+  });
+  return zones.length === 0 ? [root.children as TopLevelContent[]] : zones;
+};
 
 const getMdLangs = (codeNode: Code) => {
   if (!codeNode.lang) {
@@ -88,17 +100,16 @@ type Snippet = {
   scope?: string;
 };
 
-type NonHeadingBlockContent = Exclude<BlockContent, Heading>;
 type NestedHeading = {
   headingNode: Heading;
-  contents: NonHeadingBlockContent[];
+  contents: Exclude<TopLevelContent, Heading>[];
 };
 
-const getLeafHeadings = (root: Root) => {
+const getLeafHeadings = (blockContent: TopLevelContent[]) => {
   const nestedHeadings: NestedHeading[] = [];
 
-  for (let i = 0; i < root.children.length; i += 1) {
-    const child = root.children[i];
+  for (let i = 0; i < blockContent.length; i += 1) {
+    const child = blockContent[i];
     const previousHeading =
       nestedHeadings.length > 0 && nestedHeadings[nestedHeadings.length - 1];
     if (child.type === 'heading') {
@@ -112,7 +123,7 @@ const getLeafHeadings = (root: Root) => {
         nestedHeadings.push(newHeading);
       }
     } else if (previousHeading) {
-      previousHeading.contents.push(child as NonHeadingBlockContent);
+      previousHeading.contents.push(child);
     }
   }
   return nestedHeadings;
@@ -197,8 +208,10 @@ const assertOneSnippetPerPrefixLang = (snippets: Record<string, Snippet>) => {
   });
 };
 
-const markdownToSnippetCompiler: CompilerFunction<Root, string> = (tree) => {
-  const nestedHeadings = getLeafHeadings(tree);
+const markdownToSnippetCompiler: CompilerFunction<Root, string> = (root) => {
+  const zones = getEnabledZones(root);
+  const nestedHeadings = zones.flatMap(getLeafHeadings);
+
   const rawSnippetsByHeading = getRawSnippetsByHeading(nestedHeadings);
   const snippets = formatSnippetForVsCode(rawSnippetsByHeading);
   assertOneSnippetPerPrefixLang(snippets);

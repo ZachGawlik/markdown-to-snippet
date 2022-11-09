@@ -67,6 +67,7 @@
     "lodash-es": "^4.17.21",
     "log-symbols": "^5.1.0",
     "mdast-util-to-string": "^3.1.0",
+    "mdast-zone": "^5.1.0",
     "remark-gfm": "^3.0.1",
     "remark-parse": "^10.0.1",
     "unified": "^10.1.2",
