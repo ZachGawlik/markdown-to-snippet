@@ -35,7 +35,7 @@ const writeFile = (filepath: string, data: string) =>
   });
 
 program
-  .arguments('<snippets.md> [generated-output.code-snippet]')
+  .arguments('<snippets.md> [generated-output.code-snippets]')
   .action(async function runMarkdownToSnippet(inputFile, outputFile) {
     if (!['.md', '.markdown'].some((ext) => inputFile.endsWith(ext))) {
       exitError(
