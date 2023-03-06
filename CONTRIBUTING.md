@@ -1,0 +1,5 @@
+## Setup
+
+```
+pnpm install
+```

@@ -34,60 +34,76 @@ const writeFile = (filepath: string, data: string) =>
     throw err;
   });
 
+const INPUT_EXTENSIONS = ['.md', '.markdown'];
+const OUTPUT_EXTENSIONS = ['.code-snippets', '.json'];
+
+const processFile = async (inputFile: string, outputFile: string) => {
+  let snippet;
+  try {
+    snippet = await markdownToSnippet(inputFile);
+  } catch (e) {
+    if (e instanceof KnownError) {
+      exitError(e.toString());
+    }
+    console.error(
+      chalkStderr.red`An unexpected error occurred while processing ${inputFile}`
+    );
+    console.error(
+      chalkStderr.red(
+        chalkTemplate`Please file an issue at {italic https://github.com/ZachGawlik/markdown-to-snippet/issues} with your markdown file's content`
+      )
+    );
+    throw e;
+  }
+
+  try {
+    await writeFile(outputFile, snippet as string);
+    console.error(
+      chalkStderr.green(
+        chalkTemplate`${logSymbols.success} Snippets have been written to {italic ${outputFile}}`
+      )
+    );
+  } catch (e) {
+    console.error(chalkStderr.red`Failed to write to file ${outputFile}`);
+    throw e;
+  }
+};
+
 program
   .arguments('<snippets.md> [generated-output.code-snippets]')
-  .action(async function runMarkdownToSnippet(inputFile, outputFile) {
-    if (!['.md', '.markdown'].some((ext) => inputFile.endsWith(ext))) {
-      exitError(
-        chalkTemplate`Expected {italic ${inputFile}} to be a {bold .md} file`
-      );
-    }
-
-    let snippet;
-    try {
-      snippet = await markdownToSnippet(inputFile);
-    } catch (e) {
-      if (e instanceof KnownError) {
-        exitError(e.toString());
+  .action(async function runMarkdownToSnippet() {
+    const ioFiles = process.argv.slice(2);
+    const inputFiles: string[] = [];
+    let outputFiles: string[] = [];
+    ioFiles.forEach((f) => {
+      if (INPUT_EXTENSIONS.some((ext) => f.endsWith(ext))) {
+        inputFiles.push(f);
+      } else if (OUTPUT_EXTENSIONS.some((ext) => f.endsWith(ext))) {
+        outputFiles.push(f);
+      } else {
+        const outputMsg = chalkTemplate` or an output {bold .code-snippets or .json} file`;
+        exitError(
+          chalkTemplate`Expected {italic ${f}} to be a {bold .md or .markdown} file` +
+            (inputFiles.length > 0 ? outputMsg : '')
+        );
       }
-      console.error(
-        chalkStderr.red`An unexpected error occurred while processing your markdown file.`
-      );
-      console.error(
-        chalkStderr.red(
-          chalkTemplate`Please file an issue at {italic https://github.com/ZachGawlik/markdown-to-snippet/issues} with your markdown file's content`
-        )
-      );
-      if (e instanceof Error) {
-        throw e;
-      }
-    }
-
-    if (!outputFile) {
-      // If no outputFile, print json to stdout to be redirected
-      console.log(snippet);
-      return;
-    }
-
-    if (
-      !outputFile.endsWith('.json') &&
-      !outputFile.endsWith('.code-snippets')
-    ) {
+    });
+    if (outputFiles.length > 0 && outputFiles.length !== inputFiles.length) {
       exitError(
-        chalkTemplate`Expected {italic ${outputFile}} to be a {underline .json} or {underline .code-snippets} file`
+        chalkTemplate`When supplying output files, you must supply one for each input file`
+      );
+    } else if (outputFiles.length === 0) {
+      outputFiles = inputFiles.map((f) =>
+        f.replace(/\.(md|markdown)$/, '.code-snippets')
       );
     }
 
-    try {
-      writeFile(outputFile, snippet as string);
-      console.error(
-        chalkStderr.green(
-          chalkTemplate`${logSymbols.success} Snippets have been written to {italic ${outputFile}}`
-        )
-      );
-    } catch (err) {
-      exitError(`Failed to write to file ${err}`);
-    }
+    // default outputFile name... pwd or same dir as input?
+    await Promise.all(
+      inputFiles.map(async (inputFile, i) => {
+        processFile(inputFile, outputFiles[i]);
+      })
+    );
   });
 
 if (process.argv.length === 2) {
