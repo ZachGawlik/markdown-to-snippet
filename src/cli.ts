@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-import { constants as FS_MODES } from 'fs';
-import { access, writeFile as _writeFile, mkdir } from 'fs/promises';
-import { dirname } from 'path';
+import { writeFile, mkdir } from 'fs/promises';
+import * as path from 'path';
 import chalkTemplate from 'chalk-template';
 import { chalkStderr } from 'chalk';
 import { program } from 'commander';
@@ -11,28 +10,10 @@ import logSymbols from 'log-symbols';
 import { markdownToSnippet } from './index.js';
 import { KnownError } from './errors.js';
 
-const pathExists = (file: string, mode: number) =>
-  access(file, mode)
-    .then(() => true)
-    .catch(() => false);
-
 const exitError = (errorString: string) => {
   console.error(chalkStderr.red(`${logSymbols.error} ${errorString.trim()}`));
   process.exit(1);
 };
-
-// Write file, creating one intermediate directory if necessary
-const writeFile = (filepath: string, data: string) =>
-  _writeFile(filepath, data).catch(async (err) => {
-    if (
-      err.code === 'ENOENT' &&
-      (await pathExists(dirname(dirname(filepath)), FS_MODES.W_OK))
-    ) {
-      await mkdir(dirname(filepath));
-      return _writeFile(filepath, data);
-    }
-    throw err;
-  });
 
 const INPUT_EXTENSIONS = ['.md', '.markdown'];
 const OUTPUT_EXTENSIONS = ['.code-snippets', '.json'];
@@ -81,15 +62,19 @@ const processFile = async (
 program
   .arguments('<snippets.md> [generated-output.code-snippets]')
   .option(
+    '-o, --output-dir <dir>',
+    'output to dir from cwd instead of same dir as input file'
+  )
+  .option(
     '--output-json',
-    'use .json instead of .code-snippets when no output filename supplied'
+    'for automatic output filenames, use .json instead of .code-snippets'
   )
   .option(
     '-p, --print',
     'print the generated snippets instead of writing to file'
   )
   .action(async function runMarkdownToSnippet(...args) {
-    const { outputJson, print } = program.opts();
+    const { outputJson, outputDir, print } = program.opts();
     const inputFiles: string[] = [];
     let outputFiles: string[] = [];
     args.forEach((f) => {
@@ -119,10 +104,17 @@ program
         );
       }
     } else if (outputFiles.length === 0 && !print) {
-      const outputExtension = outputJson ? '.json' : '.code-snippets';
-      outputFiles = inputFiles.map((f) =>
-        f.replace(/\.(md|markdown)$/, outputExtension)
-      );
+      outputFiles = inputFiles.map((f) => {
+        const parsedInputPath = path.parse(f);
+        return path.format({
+          dir: outputDir ?? parsedInputPath.dir,
+          name: parsedInputPath.name,
+          ext: outputJson ? '.json' : '.code-snippets',
+        });
+      });
+    }
+    if (outputDir) {
+      await mkdir(outputDir, { recursive: true });
     }
 
     // default outputFile name... pwd or same dir as input?
