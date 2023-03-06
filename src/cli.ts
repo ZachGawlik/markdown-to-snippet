@@ -38,7 +38,7 @@ const INPUT_EXTENSIONS = ['.md', '.markdown'];
 const OUTPUT_EXTENSIONS = ['.code-snippets', '.json'];
 
 const processFile = async (inputFile: string, outputFile: string) => {
-  let snippet;
+  let snippet: string;
   try {
     snippet = await markdownToSnippet(inputFile);
   } catch (e) {
@@ -57,7 +57,7 @@ const processFile = async (inputFile: string, outputFile: string) => {
   }
 
   try {
-    await writeFile(outputFile, snippet as string);
+    await writeFile(outputFile, snippet);
     console.error(
       chalkStderr.green(
         chalkTemplate`${logSymbols.success} Snippets have been written to {italic ${outputFile}}`
