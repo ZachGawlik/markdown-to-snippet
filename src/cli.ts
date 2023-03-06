@@ -72,11 +72,11 @@ const processFile = async (inputFile: string, outputFile: string) => {
 program
   .arguments('<snippets.md> [generated-output.code-snippets]')
   .option(
-    '-x, --extension <.ext>',
-    'extension used for automatic output filenames',
-    '.code-snippets'
+    '--output-json',
+    'use .json instead of .code-snippets when no output filename supplied'
   )
   .action(async function runMarkdownToSnippet(...args) {
+    const { outputJson } = program.opts();
     const inputFiles: string[] = [];
     let outputFiles: string[] = [];
     args.forEach((f) => {
@@ -100,8 +100,9 @@ program
         chalkTemplate`When supplying output files, you must supply one for each input file`
       );
     } else if (outputFiles.length === 0) {
+      const outputExtension = outputJson ? '.json' : '.code-snippets';
       outputFiles = inputFiles.map((f) =>
-        f.replace(/\.(md|markdown)$/, '.code-snippets')
+        f.replace(/\.(md|markdown)$/, outputExtension)
       );
     }
 
