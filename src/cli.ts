@@ -37,10 +37,14 @@ const writeFile = (filepath: string, data: string) =>
 const INPUT_EXTENSIONS = ['.md', '.markdown'];
 const OUTPUT_EXTENSIONS = ['.code-snippets', '.json'];
 
-const processFile = async (inputFile: string, outputFile: string) => {
-  let snippet: string;
+const processFile = async (
+  inputFile: string,
+  outputFile: string,
+  options: { print: boolean } = { print: false }
+) => {
+  let snippetOutput: string;
   try {
-    snippet = await markdownToSnippet(inputFile);
+    snippetOutput = await markdownToSnippet(inputFile);
   } catch (e) {
     if (e instanceof KnownError) {
       exitError(e.toString());
@@ -56,17 +60,22 @@ const processFile = async (inputFile: string, outputFile: string) => {
     throw e;
   }
 
-  try {
-    await writeFile(outputFile, snippet);
-    console.error(
-      chalkStderr.green(
-        chalkTemplate`${logSymbols.success} Snippets have been written to {italic ${outputFile}}`
-      )
-    );
-  } catch (e) {
-    console.error(chalkStderr.red`Failed to write to file ${outputFile}`);
-    throw e;
+  if (options.print) {
+    console.log(snippetOutput);
+  } else {
+    try {
+      await writeFile(outputFile, snippetOutput);
+    } catch (e) {
+      console.error(chalkStderr.red`Failed to write to file ${outputFile}`);
+      throw e;
+    }
   }
+
+  console.error(
+    chalkStderr.green(
+      chalkTemplate`${logSymbols.success} Snippets have been written to {italic ${outputFile}}`
+    )
+  );
 };
 
 program
@@ -75,8 +84,12 @@ program
     '--output-json',
     'use .json instead of .code-snippets when no output filename supplied'
   )
+  .option(
+    '-p, --print',
+    'print the generated snippets instead of writing to file'
+  )
   .action(async function runMarkdownToSnippet(...args) {
-    const { outputJson } = program.opts();
+    const { outputJson, print } = program.opts();
     const inputFiles: string[] = [];
     let outputFiles: string[] = [];
     args.forEach((f) => {
@@ -95,11 +108,17 @@ program
         );
       }
     });
-    if (outputFiles.length > 0 && outputFiles.length !== inputFiles.length) {
-      exitError(
-        chalkTemplate`When supplying output files, you must supply one for each input file`
-      );
-    } else if (outputFiles.length === 0) {
+    if (outputFiles.length > 0) {
+      if (outputFiles.length !== inputFiles.length) {
+        exitError(
+          chalkTemplate`When sending output filenames, you must supply one for each input file`
+        );
+      } else if (print) {
+        exitError(
+          chalkTemplate`When sending --print, you must not supply output filenames`
+        );
+      }
+    } else if (outputFiles.length === 0 && !print) {
       const outputExtension = outputJson ? '.json' : '.code-snippets';
       outputFiles = inputFiles.map((f) =>
         f.replace(/\.(md|markdown)$/, outputExtension)
@@ -109,7 +128,7 @@ program
     // default outputFile name... pwd or same dir as input?
     await Promise.all(
       inputFiles.map(async (inputFile, i) => {
-        processFile(inputFile, outputFiles[i]);
+        processFile(inputFile, outputFiles[i], { print });
       })
     );
   });
