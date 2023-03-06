@@ -71,11 +71,18 @@ const processFile = async (inputFile: string, outputFile: string) => {
 
 program
   .arguments('<snippets.md> [generated-output.code-snippets]')
-  .action(async function runMarkdownToSnippet() {
-    const ioFiles = process.argv.slice(2);
+  .option(
+    '-x, --extension <.ext>',
+    'extension used for automatic output filenames',
+    '.code-snippets'
+  )
+  .action(async function runMarkdownToSnippet(...args) {
     const inputFiles: string[] = [];
     let outputFiles: string[] = [];
-    ioFiles.forEach((f) => {
+    args.forEach((f) => {
+      if (typeof f !== 'string') {
+        return; // options argument
+      }
       if (INPUT_EXTENSIONS.some((ext) => f.endsWith(ext))) {
         inputFiles.push(f);
       } else if (OUTPUT_EXTENSIONS.some((ext) => f.endsWith(ext))) {
