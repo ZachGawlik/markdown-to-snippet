@@ -1,8 +1,24 @@
 {
-  "Hello world": {
-    "prefix": "hw",
+  "Lorem Ipsum Line": {
+    "prefix": "loreml",
     "body": [
-      "Hello, World!"
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    ]
+  },
+  "Lorem Ipsum 1 Paragraph": {
+    "prefix": "lorem1",
+    "body": [
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque vitae vehicula est. Proin porttitor fermentum ornare. Nam suscipit maximus nisi nec fermentum. Vestibulum dapibus suscipit felis, at vehicula ante euismod blandit. Aliquam erat volutpat. Nunc cursus nulla dolor. Nullam nulla quam, suscipit at orci sit amet, vestibulum fermentum sem. Duis ac malesuada turpis. Integer nec nunc congue, pretium libero id, aliquet ligula. Aliquam ac interdum erat. Curabitur ac efficitur turpis. Nulla quis suscipit dui. Vestibulum ligula eros, pellentesque non sem vel, eleifend iaculis ipsum. Sed enim tellus, vulputate nec cursus id, vulputate non lorem."
+    ]
+  },
+  "Lorem Ipsum 3 Paragraphs": {
+    "prefix": "lorem3",
+    "body": [
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque vitae vehicula est. Proin porttitor fermentum ornare. Nam suscipit maximus nisi nec fermentum. Vestibulum dapibus suscipit felis, at vehicula ante euismod blandit. Aliquam erat volutpat. Nunc cursus nulla dolor. Nullam nulla quam, suscipit at orci sit amet, vestibulum fermentum sem. Duis ac malesuada turpis. Integer nec nunc congue, pretium libero id, aliquet ligula. Aliquam ac interdum erat. Curabitur ac efficitur turpis. Nulla quis suscipit dui. Vestibulum ligula eros, pellentesque non sem vel, eleifend iaculis ipsum. Sed enim tellus, vulputate nec cursus id, vulputate non lorem.",
+      "",
+      "Duis id rhoncus orci. Vivamus egestas tincidunt consectetur. Nullam sed urna metus. Aliquam at ligula nibh. Etiam sem odio, tempus elementum sem nec, feugiat faucibus libero. Duis tempus auctor arcu, eget tempus odio hendrerit sed. Phasellus tempor augue mi, nec maximus massa euismod vel. Sed convallis imperdiet magna, eu bibendum velit.",
+      "",
+      "Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Integer fringilla mauris dui. Duis viverra dolor dictum dignissim tincidunt. Praesent vel sem sem. Morbi dignissim rutrum purus. Cras mattis tellus ut elit tempor, quis efficitur ante congue. Maecenas egestas congue neque ac pretium. Proin mattis ligula sit amet turpis facilisis, et ultricies nibh eleifend. Ut efficitur est elit. Praesent elit erat, sagittis ut dui non, pellentesque pellentesque risus. Ut ac erat eu tortor posuere tempus et ut est. Vestibulum accumsan molestie mauris, sed viverra neque suscipit eget. Integer quis erat non ipsum luctus aliquet. Phasellus in velit quam."
     ]
   }
 }
